@@ -119,44 +119,6 @@ to_string_view( std::basic_string<CharT, Traits, Allocator> const & s )
     return std::basic_string_view<CharT, Traits>( s.data(), s.size() );
 }
 
-// Literal operators sv and _sv:
-
-#if nssv_CONFIG_STD_SV_OPERATOR
-
-using namespace std::literals::string_view_literals;
-
-#endif
-
-#if nssv_CONFIG_USR_SV_OPERATOR
-
-inline namespace literals {
-inline namespace string_view_literals {
-
-
-constexpr std::string_view operator "" _sv( const char* str, size_t len ) noexcept  // (1)
-{
-    return std::string_view{ str, len };
-}
-
-constexpr std::u16string_view operator "" _sv( const char16_t* str, size_t len ) noexcept  // (2)
-{
-    return std::u16string_view{ str, len };
-}
-
-constexpr std::u32string_view operator "" _sv( const char32_t* str, size_t len ) noexcept  // (3)
-{
-    return std::u32string_view{ str, len };
-}
-
-constexpr std::wstring_view operator "" _sv( const wchar_t* str, size_t len ) noexcept  // (4)
-{
-    return std::wstring_view{ str, len };
-}
-
-}} // namespace literals::string_view_literals
-
-#endif // nssv_CONFIG_USR_SV_OPERATOR
-
 } // namespace opentelemetry
 
 #endif // nssv_CONFIG_CONVERSION_STD_STRING_FREE_FUNCTIONS
@@ -165,8 +127,6 @@ namespace opentelemetry {
 
 using std::string_view;
 using std::wstring_view;
-using std::u16string_view;
-using std::u32string_view;
 using std::basic_string_view;
 
 // literal "sv" and "_sv", see above
@@ -228,12 +188,6 @@ using std::operator<<;
 
 // Presence of language and library features:
 
-#ifdef _HAS_CPP0X
-# define nssv_HAS_CPP0X  _HAS_CPP0X
-#else
-# define nssv_HAS_CPP0X  0
-#endif
-
 // Unless defined otherwise below, consider VC14 as C++11 for variant-lite:
 
 #if nssv_COMPILER_MSVC_VER >= 1900
@@ -251,29 +205,6 @@ using std::operator<<;
 #define nssv_CPP14_000  (nssv_CPP14_OR_GREATER)
 #define nssv_CPP17_000  (nssv_CPP17_OR_GREATER)
 
-// Presence of C++11 language features:
-
-#define nssv_HAVE_CONSTEXPR_11          nssv_CPP11_140
-#define nssv_HAVE_EXPLICIT_CONVERSION   nssv_CPP11_140
-#define nssv_HAVE_INLINE_NAMESPACE      nssv_CPP11_140
-#define nssv_HAVE_NOEXCEPT              nssv_CPP11_140
-#define nssv_HAVE_NULLPTR               nssv_CPP11_100
-#define nssv_HAVE_REF_QUALIFIER         nssv_CPP11_140
-#define nssv_HAVE_UNICODE_LITERALS      nssv_CPP11_140
-#define nssv_HAVE_USER_DEFINED_LITERALS nssv_CPP11_140
-#define nssv_HAVE_WCHAR16_T             nssv_CPP11_100
-#define nssv_HAVE_WCHAR32_T             nssv_CPP11_100
-
-#if ! ( ( nssv_CPP11_OR_GREATER && nssv_COMPILER_CLANG_VERSION ) || nssv_BETWEEN( nssv_COMPILER_CLANG_VERSION, 300, 400 ) )
-# define nssv_HAVE_STD_DEFINED_LITERALS  nssv_CPP11_140
-#else
-# define nssv_HAVE_STD_DEFINED_LITERALS  0
-#endif
-
-// Presence of C++14 language features:
-
-#define nssv_HAVE_CONSTEXPR_14          nssv_CPP14_000
-
 // Presence of C++17 language features:
 
 #define nssv_HAVE_NODISCARD             nssv_CPP17_000
@@ -283,24 +214,6 @@ using std::operator<<;
 #define nssv_HAVE_STD_HASH              nssv_CPP11_120
 
 // C++ feature usage:
-
-#if nssv_HAVE_EXPLICIT_CONVERSION
-# define nssv_explicit  explicit
-#else
-# define nssv_explicit  /*explicit*/
-#endif
-
-#if nssv_HAVE_INLINE_NAMESPACE
-# define nssv_inline_ns  inline
-#else
-# define nssv_inline_ns  /*inline*/
-#endif
-
-#if nssv_HAVE_NODISCARD
-# define nssv_nodiscard  [[nodiscard]]
-#else
-# define nssv_nodiscard  /*[[nodiscard]]*/
-#endif
 
 // Additional includes:
 
@@ -444,7 +357,7 @@ public:
     size_type max_size() const noexcept { return (std::numeric_limits< size_type >::max)(); }
 
     // since C++20
-    nssv_nodiscard bool empty() const noexcept
+    bool empty() const noexcept
     {
         return 0 == size_;
     }
@@ -763,13 +676,7 @@ public:
 
     // Constants:
 
-#if nssv_CPP17_OR_GREATER
-    static size_type npos = size_type(-1);
-#elif nssv_CPP11_OR_GREATER
     enum : size_type { npos = size_type(-1) };
-#else
-    enum { npos = size_type(-1) };
-#endif
 
 private:
     struct not_in_view
@@ -796,11 +703,7 @@ private:
 
     const_reference data_at( size_type pos ) const
     {
-#if nssv_BETWEEN( nssv_COMPILER_GNUC_VERSION, 1, 500 )
         return data_[pos];
-#else
-        return assert( pos < size() ), data_[pos];
-#endif
     }
 
 private:
@@ -1032,74 +935,8 @@ operator<<(
 
 typedef basic_string_view<char>      string_view;
 typedef basic_string_view<wchar_t>   wstring_view;
-#if nssv_HAVE_WCHAR16_T
-typedef basic_string_view<char16_t>  u16string_view;
-typedef basic_string_view<char32_t>  u32string_view;
-#endif
 
 }} // namespace opentelemetry::sv_lite
-
-//
-// 24.4.6 Suffix for basic_string_view literals:
-//
-
-#if nssv_HAVE_USER_DEFINED_LITERALS
-
-namespace opentelemetry {
-nssv_inline_ns namespace literals {
-nssv_inline_ns namespace string_view_literals {
-
-#if nssv_CONFIG_STD_SV_OPERATOR && nssv_HAVE_STD_DEFINED_LITERALS
-
-opentelemetry::sv_lite::string_view operator "" sv( const char* str, size_t len ) noexcept  // (1)
-{
-    return opentelemetry::sv_lite::string_view{ str, len };
-}
-
-opentelemetry::sv_lite::u16string_view operator "" sv( const char16_t* str, size_t len ) noexcept  // (2)
-{
-    return opentelemetry::sv_lite::u16string_view{ str, len };
-}
-
-opentelemetry::sv_lite::u32string_view operator "" sv( const char32_t* str, size_t len ) noexcept  // (3)
-{
-    return opentelemetry::sv_lite::u32string_view{ str, len };
-}
-
-opentelemetry::sv_lite::wstring_view operator "" sv( const wchar_t* str, size_t len ) noexcept  // (4)
-{
-    return opentelemetry::sv_lite::wstring_view{ str, len };
-}
-
-#endif // nssv_CONFIG_STD_SV_OPERATOR && nssv_HAVE_STD_DEFINED_LITERALS
-
-#if nssv_CONFIG_USR_SV_OPERATOR
-
-opentelemetry::sv_lite::string_view operator "" _sv( const char* str, size_t len ) noexcept  // (1)
-{
-    return opentelemetry::sv_lite::string_view{ str, len };
-}
-
-opentelemetry::sv_lite::u16string_view operator "" _sv( const char16_t* str, size_t len ) noexcept  // (2)
-{
-    return opentelemetry::sv_lite::u16string_view{ str, len };
-}
-
-opentelemetry::sv_lite::u32string_view operator "" _sv( const char32_t* str, size_t len ) noexcept  // (3)
-{
-    return opentelemetry::sv_lite::u32string_view{ str, len };
-}
-
-opentelemetry::sv_lite::wstring_view operator "" _sv( const wchar_t* str, size_t len ) noexcept  // (4)
-{
-    return opentelemetry::sv_lite::wstring_view{ str, len };
-}
-
-#endif // nssv_CONFIG_USR_SV_OPERATOR
-
-}}} // namespace opentelemetry::literals::string_view_literals
-
-#endif
 
 //
 // Extensions for std::string:
@@ -1109,19 +946,6 @@ opentelemetry::sv_lite::wstring_view operator "" _sv( const wchar_t* str, size_t
 
 namespace opentelemetry {
 namespace sv_lite {
-
-// Exclude MSVC 14 (19.00): it yields ambiguous to_string():
-
-#if nssv_CPP11_OR_GREATER && nssv_COMPILER_MSVC_VERSION != 140
-
-template< class CharT, class Traits, class Allocator = std::allocator<CharT> >
-std::basic_string<CharT, Traits, Allocator>
-to_string( basic_string_view<CharT, Traits> v, Allocator const & a = Allocator() )
-{
-    return std::basic_string<CharT,Traits, Allocator>( v.begin(), v.end(), a );
-}
-
-#else
 
 template< class CharT, class Traits >
 std::basic_string<CharT, Traits>
@@ -1136,8 +960,6 @@ to_string( basic_string_view<CharT, Traits> v, Allocator const & a )
 {
     return std::basic_string<CharT, Traits, Allocator>( v.begin(), v.end(), a );
 }
-
-#endif // nssv_CPP11_OR_GREATER
 
 template< class CharT, class Traits, class Allocator >
 basic_string_view<CharT, Traits>
@@ -1159,15 +981,6 @@ namespace opentelemetry {
 using sv_lite::basic_string_view;
 using sv_lite::string_view;
 using sv_lite::wstring_view;
-
-#if nssv_HAVE_WCHAR16_T
-using sv_lite::u16string_view;
-#endif
-#if nssv_HAVE_WCHAR32_T
-using sv_lite::u32string_view;
-#endif
-
-// literal "sv"
 
 using sv_lite::operator==;
 using sv_lite::operator!=;
@@ -1213,26 +1026,6 @@ public:
     std::size_t operator()( opentelemetry::wstring_view v ) const noexcept
     {
         return std::hash<std::wstring>()( std::wstring( v.data(), v.size() ) );
-    }
-};
-
-template<>
-struct hash< opentelemetry::u16string_view >
-{
-public:
-    std::size_t operator()( opentelemetry::u16string_view v ) const noexcept
-    {
-        return std::hash<std::u16string>()( std::u16string( v.data(), v.size() ) );
-    }
-};
-
-template<>
-struct hash< opentelemetry::u32string_view >
-{
-public:
-    std::size_t operator()( opentelemetry::u32string_view v ) const noexcept
-    {
-        return std::hash<std::u32string>()( std::u32string( v.data(), v.size() ) );
     }
 };
 
