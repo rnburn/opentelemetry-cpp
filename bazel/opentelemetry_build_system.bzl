@@ -17,15 +17,23 @@ def opentelemetry_package():
 def opentelemetry_cc_library(name, copts = [], *args, **kwargs):
   native.cc_library(
       name = name, 
-      copts = copts + opentelemetry_copts(),
+      copts = opentelemetry_copts() + copts,
       *args, 
       **kwargs,
   )
 
-def opentelemetry_catch_test(name, deps = [], *args, **kwargs):
+def opentelemetry_catch_test(name, deps = [], copts = [], *args, **kwargs):
   native.cc_test(
       name = name,
       deps = deps + ["//3rd_party/catch2:main_lib"],
+      copts = opentelemetry_copts() + copts,
+      *args,
+      **kwargs,
+  )
+  native.cc_test(
+      name = name + "_cpp17",
+      deps = deps + ["//3rd_party/catch2:main_lib"],
+      copts = opentelemetry_copts() + copts + ["-std=c++17"],
       *args,
       **kwargs,
   )

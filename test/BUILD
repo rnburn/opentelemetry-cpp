@@ -11,4 +11,7 @@ opentelemetry_catch_test(
     srcs = [
         "variant_test.cpp",
     ],
+    deps = [
+        "//:opentelemetry_lib",
+    ],
 )

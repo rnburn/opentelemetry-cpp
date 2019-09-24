@@ -29,4 +29,11 @@
 #error "OPENTELEMETRY_HAVE_STD_VARIANT cannot be directly set."
 #endif
 
+#ifdef __has_include
+#if __has_include(<variant>) && __cplusplus >= 201703L && \
+    !OPENTELEMETRY_INTERNAL_APPLE_CXX17_TYPES_UNAVAILABLE
+#define OPENTELEMETRY_HAVE_STD_VARIANT 1
+#endif
+#endif
+
 #endif // CONFIG_H
