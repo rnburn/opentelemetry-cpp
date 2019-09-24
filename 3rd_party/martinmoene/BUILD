@@ -7,12 +7,8 @@ load(
 opentelemetry_package()
 
 opentelemetry_cc_library(
-    name = "opentelemetry_lib",
+    name = "string_view_lib",
     hdrs = glob(["include/**/*.h"]),
     strip_include_prefix = "include",
-    deps = [
-        "//3rd_party/mpark:variant_lib",
-        "//3rd_party/martinmoene:string_view_lib",
-    ],
 )
 

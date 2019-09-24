@@ -15,3 +15,13 @@ opentelemetry_catch_test(
         "//:opentelemetry_lib",
     ],
 )
+
+opentelemetry_catch_test(
+    name = "string_view_test",
+    srcs = [
+        "string_view_test.cpp",
+    ],
+    deps = [
+        "//:opentelemetry_lib",
+    ],
+)
