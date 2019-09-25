@@ -25,3 +25,13 @@ opentelemetry_catch_test(
         "//:opentelemetry_lib",
     ],
 )
+
+opentelemetry_catch_test(
+    name = "attribute_value_test",
+    srcs = [
+        "attribute_value_test.cpp",
+    ],
+    deps = [
+        "//:opentelemetry_lib",
+    ],
+)
