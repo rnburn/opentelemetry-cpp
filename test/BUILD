@@ -35,3 +35,13 @@ opentelemetry_catch_test(
         "//:opentelemetry_lib",
     ],
 )
+
+opentelemetry_catch_test(
+    name = "timestamp_test",
+    srcs = [
+        "timestamp_test.cpp",
+    ],
+    deps = [
+        "//:opentelemetry_lib",
+    ],
+)
